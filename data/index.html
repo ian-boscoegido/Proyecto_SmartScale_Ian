@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SmartScale Health</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #eef7f3;
+      color: #1f2d2b;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: auto;
+      padding: 20px;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #2f8f6f, #1f6f55);
+      color: white;
+      padding: 24px;
+      border-radius: 24px;
+      margin-bottom: 20px;
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: 30px;
+    }
+
+    .header p {
+      margin: 8px 0 0;
+      opacity: 0.9;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 22px;
+      padding: 20px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+      margin-bottom: 16px;
+    }
+
+    .label {
+      color: #6d7c78;
+      font-size: 14px;
+    }
+
+    .value {
+      font-size: 34px;
+      font-weight: bold;
+      margin-top: 8px;
+    }
+
+    button {
+      border: none;
+      background: #2f8f6f;
+      color: white;
+      padding: 14px 18px;
+      border-radius: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 12px;
+      width: 100%;
+    }
+
+    button:hover {
+      background: #1f6f55;
+    }
+
+    button.secondary {
+      background: #e7f4ef;
+      color: #1f6f55;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 13px;
+      border-radius: 12px;
+      border: 1px solid #d8e5e0;
+      margin-top: 8px;
+      box-sizing: border-box;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 14px;
+    }
+
+    .recommendation {
+      background: #e7f4ef;
+      padding: 16px;
+      border-radius: 16px;
+      margin-top: 12px;
+      line-height: 1.5;
+    }
+
+    .warning {
+      background: #fff4d6;
+    }
+
+    .danger {
+      background: #ffe3e3;
+    }
+
+    .small {
+      font-size: 13px;
+      color: #6d7c78;
+      margin-top: 8px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      font-size: 14px;
+    }
+
+    th, td {
+      border-bottom: 1px solid #e2ebe8;
+      padding: 10px;
+      text-align: left;
+    }
+
+    th {
+      color: #6d7c78;
+    }
+
+    .tag {
+      display: inline-block;
+      background: #e7f4ef;
+      color: #1f6f55;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-weight: bold;
+      font-size: 13px;
+    }
+
+    .auto-save {
+      background: #e7f4ef;
+      border-radius: 14px;
+      padding: 12px;
+      font-size: 14px;
+      color: #1f6f55;
+      font-weight: bold;
+      margin-top: 12px;
+    }
+
+    .status-ok {
+      color: #1f6f55;
+      font-weight: bold;
+    }
+
+    .status-error {
+      color: #9b1c1c;
+      font-weight: bold;
+    }
+
+    .bar-chart {
+      display: flex;
+      align-items: flex-end;
+      gap: 12px;
+      height: 260px;
+      padding: 20px 10px 10px;
+      border-radius: 18px;
+      background: #f5faf8;
+      overflow-x: auto;
+    }
+
+    .bar-item {
+      min-width: 58px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
+    .bar-value {
+      font-size: 12px;
+      font-weight: bold;
+      color: #1f6f55;
+      margin-bottom: 6px;
+      white-space: nowrap;
+    }
+
+    .bar {
+      width: 36px;
+      min-height: 8px;
+      background: linear-gradient(180deg, #2f8f6f, #1f6f55);
+      border-radius: 10px 10px 4px 4px;
+    }
+
+    .bar-label {
+      font-size: 11px;
+      color: #6d7c78;
+      margin-top: 8px;
+      text-align: center;
+      max-width: 70px;
+    }
+
+    .chart-info {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .chart-pill {
+      background: #e7f4ef;
+      color: #1f6f55;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+
+    <div class="header">
+      <h1>SmartScale Health</h1>
+      <p>Báscula inteligente multiusuario con datos guardados en CSV</p>
+    </div>
+
+    <div id="userSelectSection" class="card">
+      <h2>Seleccionar usuario</h2>
+      <p class="small">
+        Los usuarios se cargan desde <strong>perfiles.csv</strong>. Si la microSD está funcionando, estos datos vienen de la tarjeta.
+      </p>
+
+      <select id="selectorUsuarios"></select>
+
+      <button onclick="seleccionarUsuarioGuardado()">Usar este usuario</button>
+      <button class="secondary" onclick="mostrarFormularioNuevoUsuario()">Crear nuevo usuario</button>
+
+      <p class="small" id="estadoCargaUsuarios">Cargando usuarios...</p>
+    </div>
+
+    <div id="profileSection" class="card hidden">
+      <h2>Crear usuario</h2>
+      <p class="small">
+        Al guardar, el usuario se añade al CSV del ESP32. Si la microSD está activa, también queda guardado en la tarjeta.
+      </p>
+
+      <div class="form-grid">
+        <div>
+          <label>Nombre</label>
+          <input type="text" id="nombre" placeholder="Ej: Ian">
+        </div>
+
+        <div>
+          <label>Altura en cm</label>
+          <input type="number" id="altura" placeholder="Ej: 175">
+        </div>
+
+        <div>
+          <label>Edad</label>
+          <input type="number" id="edad" placeholder="Ej: 22">
+        </div>
+
+        <div>
+          <label>Sexo</label>
+          <select id="sexo">
+            <option value="hombre">Hombre</option>
+            <option value="mujer">Mujer</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Objetivo</label>
+          <select id="objetivo">
+            <option value="mantener">Mantener peso</option>
+            <option value="perder">Perder peso</option>
+            <option value="ganar">Ganar peso</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Peso objetivo</label>
+          <input type="number" id="pesoObjetivo" step="0.1" placeholder="Ej: 70">
+        </div>
+      </div>
+
+      <button onclick="guardarPerfil()">Guardar usuario</button>
+      <button class="secondary" onclick="mostrarSelectorUsuarios()">Volver a usuarios</button>
+    </div>
+
+    <div id="dashboardSection" class="hidden">
+      <div class="card">
+        <span class="tag" id="usuarioActivo">Usuario</span>
+        <button class="secondary" onclick="mostrarSelectorUsuarios()">Cambiar usuario</button>
+      </div>
+
+      <div class="grid">
+        <div class="card">
+          <div class="label">Peso actual</div>
+          <div class="value" id="pesoActual">-- kg</div>
+          <div class="small" id="estado">Esperando datos...</div>
+          <button onclick="actualizarPeso()">Actualizar</button>
+        </div>
+
+        <div class="card">
+          <div class="label">Peso final</div>
+          <div class="value" id="pesoFinal">-- kg</div>
+          <div class="small">Último peso estable detectado</div>
+          <div class="auto-save">Se guarda automáticamente cuando aparece Peso final</div>
+          <div class="small" id="ultimoGuardado">Último guardado: --</div>
+        </div>
+
+        <div class="card">
+          <div class="label">IMC</div>
+          <div class="value" id="imc">--</div>
+          <div class="small" id="imcEstado">Sin datos</div>
+        </div>
+
+        <div class="card">
+          <div class="label">Objetivo</div>
+          <div class="value" id="objetivoDistancia">-- kg</div>
+          <div class="small" id="objetivoTexto">Sin objetivo</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Recomendaciones</h2>
+        <div id="recomendaciones" class="recommendation">
+          Esperando datos para generar recomendaciones.
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Evolución del peso</h2>
+        <p class="small">Gráfico de barras con los últimos pesos guardados en el CSV para este usuario.</p>
+
+        <div class="chart-info">
+          <div class="chart-pill" id="pesoMinimo">Mínimo: -- kg</div>
+          <div class="chart-pill" id="pesoMaximo">Máximo: -- kg</div>
+          <div class="chart-pill" id="pesoCambio">Cambio: -- kg</div>
+        </div>
+
+        <div id="graficoPesos" class="bar-chart">
+          Cargando gráfico...
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Estado de almacenamiento</h2>
+        <p class="small" id="estadoSD">Comprobando microSD...</p>
+        <button class="secondary" onclick="comprobarSD()">Comprobar microSD</button>
+      </div>
+
+      <div class="card">
+        <h2>Acciones de la báscula</h2>
+        <button onclick="hacerTara()">Hacer tara</button>
+        <button class="secondary" onclick="descargarPesos()">Ver CSV de pesos</button>
+        <button class="secondary" onclick="descargarPerfiles()">Ver CSV de perfiles</button>
+      </div>
+
+      <div class="card">
+        <h2>Historial del usuario desde CSV</h2>
+        <div id="historial">Cargando historial...</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let perfil = null;
+    let usuarios = [];
+    let pesosCSV = [];
+    let pesoActual = 0;
+    let pesoFinal = 0;
+
+    window.onload = function() {
+      sincronizarHora();
+      setInterval(sincronizarHora, 30000);
+
+      iniciarWeb();
+
+      setInterval(actualizarPeso, 2000);
+      setInterval(cargarHistorial, 5000);
+    };
+
+    async function iniciarWeb() {
+      await comprobarSD();
+      await cargarUsuariosDesdeCSV();
+
+      const nombreActivo = localStorage.getItem("smartscale_usuario_activo");
+
+      if (nombreActivo && usuarios.length > 0) {
+        const encontrado = usuarios.find(u => u.nombre === nombreActivo);
+
+        if (encontrado) {
+          perfil = encontrado;
+          mostrarDashboard();
+          return;
+        }
+      }
+
+      if (usuarios.length > 0) {
+        mostrarSelectorUsuarios();
+      } else {
+        mostrarFormularioNuevoUsuario();
+      }
+    }
+
+    function sincronizarHora() {
+      const epoch = Math.floor(Date.now() / 1000);
+
+      fetch("/api/set-time?epoch=" + epoch)
+        .catch(() => {
+          console.log("No se pudo sincronizar hora");
+        });
+    }
+
+    async function comprobarSD() {
+      try {
+        const response = await fetch("/api/sd-status");
+        const data = await response.json();
+
+        const estadoSD = document.getElementById("estadoSD");
+
+        if (!estadoSD) {
+          return;
+        }
+
+        if (data.sd_disponible) {
+          estadoSD.innerHTML = "<span class='status-ok'>microSD detectada</span> - " + data.tamano_mb + " MB";
+        } else {
+          estadoSD.innerHTML = "<span class='status-error'>microSD no detectada</span> - usando memoria interna";
+        }
+      } catch (error) {
+        const estadoSD = document.getElementById("estadoSD");
+
+        if (estadoSD) {
+          estadoSD.innerHTML = "<span class='status-error'>No se pudo comprobar la microSD</span>";
+        }
+      }
+    }
+
+    function parseCSVLine(linea) {
+      return linea.split(",").map(c => c.trim());
+    }
+
+    async function cargarUsuariosDesdeCSV() {
+      try {
+        const response = await fetch("/api/perfiles.csv?nocache=" + Date.now());
+        const csv = await response.text();
+
+        usuarios = [];
+
+        const lineas = csv.trim().split("\n");
+
+        if (lineas.length <= 1) {
+          actualizarSelectorUsuarios();
+          return;
+        }
+
+        lineas.slice(1).forEach(linea => {
+          const cols = parseCSVLine(linea);
+
+          if (cols.length >= 6) {
+            const usuario = {
+              nombre: cols[0],
+              altura: Number(cols[1]),
+              edad: Number(cols[2]),
+              sexo: cols[3] || "hombre",
+              objetivo: cols[4] || "mantener",
+              pesoObjetivo: Number(cols[5])
+            };
+
+            if (usuario.nombre && usuario.altura > 0) {
+              const indexExistente = usuarios.findIndex(u => u.nombre.toLowerCase() === usuario.nombre.toLowerCase());
+
+              if (indexExistente >= 0) {
+                usuarios[indexExistente] = usuario;
+              } else {
+                usuarios.push(usuario);
+              }
+            }
+          }
+        });
+
+        actualizarSelectorUsuarios();
+
+        const estado = document.getElementById("estadoCargaUsuarios");
+        if (estado) {
+          estado.innerText = "Usuarios cargados desde CSV: " + usuarios.length;
+        }
+
+      } catch (error) {
+        usuarios = [];
+        actualizarSelectorUsuarios();
+
+        const estado = document.getElementById("estadoCargaUsuarios");
+        if (estado) {
+          estado.innerText = "No se pudieron cargar usuarios desde perfiles.csv";
+        }
+      }
+    }
+
+    function actualizarSelectorUsuarios() {
+      const selector = document.getElementById("selectorUsuarios");
+
+      if (!selector) {
+        return;
+      }
+
+      selector.innerHTML = "";
+
+      if (usuarios.length === 0) {
+        const option = document.createElement("option");
+        option.value = "";
+        option.textContent = "No hay usuarios creados";
+        selector.appendChild(option);
+        return;
+      }
+
+      usuarios.forEach((usuario, index) => {
+        const option = document.createElement("option");
+        option.value = index;
+        option.textContent = usuario.nombre + " - " + usuario.altura + " cm";
+        selector.appendChild(option);
+      });
+    }
+
+    async function mostrarSelectorUsuarios() {
+      document.getElementById("userSelectSection").classList.remove("hidden");
+      document.getElementById("profileSection").classList.add("hidden");
+      document.getElementById("dashboardSection").classList.add("hidden");
+
+      await cargarUsuariosDesdeCSV();
+    }
+
+    function mostrarFormularioNuevoUsuario() {
+      document.getElementById("userSelectSection").classList.add("hidden");
+      document.getElementById("profileSection").classList.remove("hidden");
+      document.getElementById("dashboardSection").classList.add("hidden");
+
+      document.getElementById("nombre").value = "";
+      document.getElementById("altura").value = "";
+      document.getElementById("edad").value = "";
+      document.getElementById("sexo").value = "hombre";
+      document.getElementById("objetivo").value = "mantener";
+      document.getElementById("pesoObjetivo").value = "";
+    }
+
+    function seleccionarUsuarioGuardado() {
+      const selector = document.getElementById("selectorUsuarios");
+      const index = Number(selector.value);
+
+      if (usuarios.length === 0 || isNaN(index)) {
+        alert("No hay ningún usuario seleccionado.");
+        return;
+      }
+
+      perfil = usuarios[index];
+
+      localStorage.setItem("smartscale_usuario_activo", perfil.nombre);
+
+      mostrarDashboard();
+    }
+
+    function mostrarDashboard() {
+      document.getElementById("userSelectSection").classList.add("hidden");
+      document.getElementById("profileSection").classList.add("hidden");
+      document.getElementById("dashboardSection").classList.remove("hidden");
+
+      document.getElementById("usuarioActivo").innerText = "Usuario activo: " + perfil.nombre;
+
+      sincronizarHora();
+      enviarUsuarioActivo();
+      actualizarPeso();
+      cargarHistorial();
+      comprobarSD();
+    }
+
+    async function guardarPerfil() {
+      const nombre = document.getElementById("nombre").value.trim();
+      const altura = Number(document.getElementById("altura").value);
+      const edad = Number(document.getElementById("edad").value);
+      const sexo = document.getElementById("sexo").value;
+      const objetivo = document.getElementById("objetivo").value;
+      const pesoObjetivo = Number(document.getElementById("pesoObjetivo").value);
+
+      if (!nombre || !altura) {
+        alert("Introduce al menos nombre y altura.");
+        return;
+      }
+
+      const nuevoPerfil = {
+        nombre,
+        altura,
+        edad,
+        sexo,
+        objetivo,
+        pesoObjetivo
+      };
+
+      const url = "/api/perfil"
+        + "?nombre=" + encodeURIComponent(nombre)
+        + "&altura=" + encodeURIComponent(altura)
+        + "&edad=" + encodeURIComponent(edad)
+        + "&sexo=" + encodeURIComponent(sexo)
+        + "&objetivo=" + encodeURIComponent(objetivo)
+        + "&peso_objetivo=" + encodeURIComponent(pesoObjetivo);
+
+      try {
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (!data.ok) {
+          alert("No se pudo guardar el usuario.");
+          return;
+        }
+
+        await cargarUsuariosDesdeCSV();
+
+        perfil = nuevoPerfil;
+        localStorage.setItem("smartscale_usuario_activo", perfil.nombre);
+
+        mostrarDashboard();
+
+      } catch (error) {
+        alert("No se pudo guardar el usuario en el CSV.");
+      }
+    }
+
+    function enviarUsuarioActivo() {
+      if (!perfil || !perfil.nombre || !perfil.altura) {
+        return;
+      }
+
+      const url = "/api/usuario-activo"
+        + "?nombre=" + encodeURIComponent(perfil.nombre)
+        + "&altura=" + encodeURIComponent(perfil.altura);
+
+      fetch(url)
+        .then(r => r.json())
+        .catch(() => {
+          console.log("No se pudo enviar usuario activo");
+        });
+    }
+
+    function actualizarPeso() {
+      fetch("/api/peso?nocache=" + Date.now())
+        .then(response => response.json())
+        .then(data => {
+          pesoActual = Number(data.peso);
+          pesoFinal = Number(data.peso_final);
+
+          document.getElementById("pesoActual").innerText = pesoActual.toFixed(1) + " kg";
+          document.getElementById("pesoFinal").innerText = pesoFinal.toFixed(1) + " kg";
+          document.getElementById("estado").innerText = data.estable ? "Peso estable" : "Midiendo...";
+
+          if (data.ultimo_guardado && data.ultimo_guardado.length > 0) {
+            document.getElementById("ultimoGuardado").innerText = "Último guardado: " + data.ultimo_guardado;
+          }
+
+          calcularSalud();
+        })
+        .catch(() => {
+          document.getElementById("estado").innerText = "Sin conexión con ESP32";
+        });
+    }
+
+    function calcularSalud() {
+      if (!perfil || !perfil.altura || pesoActual <= 0) {
+        return;
+      }
+
+      const alturaM = perfil.altura / 100;
+      const imc = pesoActual / (alturaM * alturaM);
+
+      document.getElementById("imc").innerText = imc.toFixed(1);
+
+      let estado = "";
+      let recomendacion = "";
+
+      if (imc < 18.5) {
+        estado = "Bajo peso";
+        recomendacion = "Tu IMC está por debajo del rango saludable. Prioriza una alimentación suficiente y consulta con un profesional si esta situación se mantiene.";
+        document.getElementById("recomendaciones").className = "recommendation warning";
+      } else if (imc < 25) {
+        estado = "Peso saludable";
+        recomendacion = "Tu IMC está dentro del rango saludable. Mantén hábitos constantes: actividad física, buena hidratación, descanso y alimentación equilibrada.";
+        document.getElementById("recomendaciones").className = "recommendation";
+      } else if (imc < 30) {
+        estado = "Sobrepeso";
+        recomendacion = "Tu IMC está en rango de sobrepeso. Puede ser útil mejorar hábitos poco a poco y seguir la evolución semanal, sin obsesionarse con cambios diarios.";
+        document.getElementById("recomendaciones").className = "recommendation warning";
+      } else {
+        estado = "Obesidad";
+        recomendacion = "Tu IMC está en un rango elevado. Lo más recomendable es consultar con un profesional sanitario para definir un plan adaptado.";
+        document.getElementById("recomendaciones").className = "recommendation danger";
+      }
+
+      document.getElementById("imcEstado").innerText = estado;
+      document.getElementById("recomendaciones").innerText = recomendacion;
+
+      if (perfil.pesoObjetivo && perfil.pesoObjetivo > 0) {
+        const diferencia = pesoActual - perfil.pesoObjetivo;
+
+        document.getElementById("objetivoDistancia").innerText = Math.abs(diferencia).toFixed(1) + " kg";
+
+        if (Math.abs(diferencia) < 0.3) {
+          document.getElementById("objetivoTexto").innerText = "Objetivo prácticamente alcanzado";
+        } else if (diferencia > 0) {
+          document.getElementById("objetivoTexto").innerText = "Por encima del objetivo";
+        } else {
+          document.getElementById("objetivoTexto").innerText = "Por debajo del objetivo";
+        }
+      }
+    }
+
+    function hacerTara() {
+      fetch("/api/tara")
+        .then(() => actualizarPeso())
+        .catch(() => alert("No se pudo hacer tara"));
+    }
+
+    async function cargarPesosDesdeCSV() {
+      try {
+        const response = await fetch("/api/pesos.csv?nocache=" + Date.now());
+        const csv = await response.text();
+
+        pesosCSV = [];
+
+        const lineas = csv.trim().split("\n");
+
+        if (lineas.length <= 1) {
+          return;
+        }
+
+        lineas.slice(1).forEach(linea => {
+          const cols = parseCSVLine(linea);
+
+          if (cols.length >= 6) {
+            pesosCSV.push({
+              fecha: cols[0],
+              nombre: cols[1],
+              altura: Number(cols[2]),
+              peso: Number(cols[3]),
+              imc: Number(cols[4]),
+              estado: cols[5]
+            });
+          }
+        });
+      } catch (error) {
+        pesosCSV = [];
+      }
+    }
+
+    function dibujarGraficoPesos() {
+      const contenedor = document.getElementById("graficoPesos");
+
+      if (!contenedor || !perfil) {
+        return;
+      }
+
+      const datos = pesosCSV
+        .filter(item => item.nombre === perfil.nombre)
+        .slice(-10);
+
+      if (!datos.length) {
+        contenedor.innerHTML = "<p class='small'>Todavía no hay datos suficientes para mostrar el gráfico.</p>";
+
+        document.getElementById("pesoMinimo").innerText = "Mínimo: -- kg";
+        document.getElementById("pesoMaximo").innerText = "Máximo: -- kg";
+        document.getElementById("pesoCambio").innerText = "Cambio: -- kg";
+
+        return;
+      }
+
+      const pesos = datos.map(item => item.peso);
+      const pesoMin = Math.min(...pesos);
+      const pesoMax = Math.max(...pesos);
+      const pesoPrimero = datos[0].peso;
+      const pesoUltimo = datos[datos.length - 1].peso;
+      const cambio = pesoUltimo - pesoPrimero;
+
+      document.getElementById("pesoMinimo").innerText = "Mínimo: " + pesoMin.toFixed(1) + " kg";
+      document.getElementById("pesoMaximo").innerText = "Máximo: " + pesoMax.toFixed(1) + " kg";
+
+      if (cambio > 0) {
+        document.getElementById("pesoCambio").innerText = "Cambio: +" + cambio.toFixed(1) + " kg";
+      } else {
+        document.getElementById("pesoCambio").innerText = "Cambio: " + cambio.toFixed(1) + " kg";
+      }
+
+      let html = "";
+
+      datos.forEach(item => {
+        let alturaBarra = 80;
+
+        if (pesoMax !== pesoMin) {
+          alturaBarra = 40 + ((item.peso - pesoMin) / (pesoMax - pesoMin)) * 180;
+        }
+
+        let fechaCorta = item.fecha;
+
+        if (fechaCorta.includes(" ")) {
+          const partes = fechaCorta.split(" ");
+          const fecha = partes[0];
+          const hora = partes[1] || "";
+
+          const fechaPartes = fecha.split("-");
+          if (fechaPartes.length === 3) {
+            fechaCorta = fechaPartes[2] + "/" + fechaPartes[1];
+          }
+
+          if (hora.length >= 5) {
+            fechaCorta += "<br>" + hora.substring(0, 5);
+          }
+        }
+
+        html += "<div class='bar-item'>";
+        html += "<div class='bar-value'>" + item.peso.toFixed(1) + " kg</div>";
+        html += "<div class='bar' style='height:" + alturaBarra + "px'></div>";
+        html += "<div class='bar-label'>" + fechaCorta + "</div>";
+        html += "</div>";
+      });
+
+      contenedor.innerHTML = html;
+    }
+
+    async function cargarHistorial() {
+      if (!perfil) {
+        return;
+      }
+
+      await cargarPesosDesdeCSV();
+
+      dibujarGraficoPesos();
+
+      const datos = pesosCSV
+        .filter(item => item.nombre === perfil.nombre)
+        .slice(-10)
+        .reverse();
+
+      const contenedor = document.getElementById("historial");
+
+      if (!datos.length) {
+        contenedor.innerHTML = "<p class='small'>Todavía no hay pesos guardados para este usuario en el CSV.</p>";
+        return;
+      }
+
+      let html = "<table>";
+      html += "<tr><th>Fecha</th><th>Usuario</th><th>Peso</th><th>IMC</th><th>Estado</th></tr>";
+
+      datos.forEach(item => {
+        html += "<tr>";
+        html += "<td>" + item.fecha + "</td>";
+        html += "<td>" + item.nombre + "</td>";
+        html += "<td>" + item.peso.toFixed(1) + " kg</td>";
+        html += "<td>" + item.imc.toFixed(1) + "</td>";
+        html += "<td>" + item.estado + "</td>";
+        html += "</tr>";
+      });
+
+      html += "</table>";
+
+      contenedor.innerHTML = html;
+    }
+
+    function descargarPesos() {
+      window.open("/api/pesos.csv", "_blank");
+    }
+
+    function descargarPerfiles() {
+      window.open("/api/perfiles.csv", "_blank");
+    }
+  </script>
+</body>
+</html>
